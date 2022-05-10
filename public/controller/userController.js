@@ -228,7 +228,7 @@ class UserController {
     }
 
 
-    selectAll(){
+    selectAll(){}
 
         HttpRequest.get('/users').then(data =>{
 
