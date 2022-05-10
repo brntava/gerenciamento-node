@@ -70,93 +70,69 @@ class User {
                     break;
 
                 default:
-                    this[name] = json[name];
+                    if(name.substring(0,1) === '_')this[name] = json[name];
             }
 
         }
         
     };
 
-    getNewID(){
-
-        // Guarda o ultimo id
-
-        let usersID = parseInt(localStorage.getItem('usersId'));
-
-        if(!usersID > 0) usersID = 0;
-
-        usersID++;
-
-        localStorage.setItem('usersId', usersID);
-
-        return usersID;
-    }
-
     // Salvar o usuario no localstorage
 
     static getUsersStorage(){
 
-        let users = [];
+        return HttpRequest.get('/users');
 
-        if(localStorage.getItem('users')){
+    }
 
-            users = JSON.parse(localStorage.getItem('users'));
+    toJSON(){
 
-        };
+        let json = {};
 
-        return users
+        Object.keys(this).forEach(key => {
 
+            if(this[key] !== undefined) json[key] = this[key];
+
+        });
+
+        return json;
+        
     }
  
     save(){
 
-        // Retorna os dados do json
-        let users = User.getUsersStorage();
+        return new Promise((resolve, reject) =>{
 
-        // Verifica se existe um id
+            let promise;
 
-        if(this.id > 0){
+            if(this.id){
 
-            users.map( u =>{
+                promise = HttpRequest.put(`user/${this.id}`, this.toJSON());
 
-                if(u._id == this.id){
+            } else{
 
-                    //Object.assign(u, this);
+                promise = HttpRequest.post(`/users`, this.toJSON)
 
-                    u = this;
-                }
+            }
 
-                return u;
+            promise.then(data => {
+
+                this.loadFromJSON(data);
+                resolve(this);
+
+            }).catch(e =>{
+
+                reject(e);
 
             })
 
-        } else{
+        })
 
-            this._id = this.getNewID();
-
-            users.push(this);
-
-        }
-
-        localStorage.setItem('users', JSON.stringify(users));
     }
 
     remove(){
 
-        let users = User.getUsersStorage();
+        return HttpRequest.delete(`/users/${this.id}`)
 
-        users.forEach((userData, index) =>{
-
-            if(this._id == userData._id){
-
-                // Remove item do array
-                users.splice(index, 1);
-            }
-
-        });
-
-        localStorage.setItem('users', JSON.stringify(users));
-        
-    }
-
+    };
 }
